@@ -1,0 +1,11 @@
+# Compiled and build file
+__pycache__/
+
+# Exlclude virtual python environment
+venv/
+
+# Exclude database files
+*.db
+
+# Env file
+.env
