@@ -1,5 +1,9 @@
 flask
-python-dotenv
+werkzeug
 pydantic
 tensorflow
+numpy
 scikit-learn
+pandas
+python-dotenv
+xlsxwriter

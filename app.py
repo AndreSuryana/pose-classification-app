@@ -1,5 +1,5 @@
-from flask import Flask, request, jsonify
-from werkzeug.exceptions import HTTPException
+from flask import Flask, request, jsonify, make_response
+from werkzeug.exceptions import HTTPException, BadRequest
 from pydantic import BaseModel, ValidationError, conlist
 from typing import List
 from dotenv import load_dotenv
@@ -7,6 +7,9 @@ from dotenv import load_dotenv
 import tensorflow as tf
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
+
+import pandas as pd
+from io import BytesIO
 
 import os
 import time
@@ -92,18 +95,44 @@ def predict():
 
 @app.route('/history', methods=['GET'])
 def get_prediction_history():
-    # TODO: Create a query parameter to determine between showing as JSON or Download as .xlsx document
-
     # Retrieve the histories
     histories = get_all_prediction_history()
     
     # Log the results
     log.d('Histories: ', histories)
 
-    return jsonify({
-        'count': len(histories),
-        'histories': histories
-    })
+    # Get the format parameter
+    format = request.args.get('format', 'json').lower()
+    log.d('Expected format: ', format)
+
+    # Compose response according to the requested format
+    if format == 'xlsx':
+        # Convert into DataFrame
+        df = pd.DataFrame(histories, columns=['id', 'predictions', 'category', 'confidence', 'prediction_time', 'keypoints', 'timestamp'])
+    
+        # Create an in-memory output file
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name='Histories')
+
+        # Set the buffer position to the beginning of the stream
+        output.seek(0)
+
+        # Create a response with the Excel file
+        response = make_response(output.read())
+        response.headers['Content-Disposition'] = 'attachment; filename=prediction_history.xlsx'
+        response.headers['Content-type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        
+        return response
+    
+    elif format == 'json':
+        return jsonify({
+            'count': len(histories),
+            'histories': histories
+        })
+    
+    else:
+        raise BadRequest(f"Unsupported format: {format}. Supported formats are 'json' and 'xlsx'.")
 
 @app.errorhandler(HTTPException)
 def handle_exception(e):
