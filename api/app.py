@@ -26,11 +26,12 @@ load_dotenv()
 # Create Flask app
 app = Flask(__name__)
 
-# Load the TensorFlow model
-model = tf.keras.models.load_model('cnn/model.keras')
-
-# Define the class labels or categories in this case
-categories = load_categories('cnn/categories.txt')
+# Load the TensorFlow model and class labels (categories)
+base_dir = os.path.dirname(os.path.abspath(__file__))
+model_file_path = os.path.join(base_dir, 'cnn', 'model.keras')
+class_file_path = os.path.join(base_dir, 'cnn', 'categories.txt')
+model = tf.keras.models.load_model(model_file_path)
+categories = load_categories(class_file_path)
 
 # Fit the LabelEncoder with the class labels
 label_encoder = LabelEncoder()
@@ -108,6 +109,7 @@ def get_prediction_history():
     # Compose response according to the requested format
     if format == 'xlsx':
         # Convert into DataFrame
+        # TODO: Match the exported xlsx with the dataset from the CNN Model Training Datasets
         df = pd.DataFrame(histories, columns=['id', 'predictions', 'category', 'confidence', 'prediction_time', 'keypoints', 'timestamp'])
     
         # Create an in-memory output file
