@@ -6,7 +6,7 @@ import logger as log
 class Database:
     def __init__(self):
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        db_name = os.getenv('DB_NAME', 'database.db')
+        db_name = os.getenv('API_DB', 'database.db')
         self.db_path = os.path.join(base_dir, db_name)
         self.db_schema = os.path.join(base_dir, 'schema.sql')
 

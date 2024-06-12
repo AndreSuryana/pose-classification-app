@@ -2,7 +2,6 @@ from flask import Flask, request, jsonify, make_response
 from werkzeug.exceptions import HTTPException, BadRequest
 from pydantic import BaseModel, ValidationError, conlist
 from typing import List
-from dotenv import load_dotenv
 
 import tensorflow as tf
 import numpy as np
@@ -19,9 +18,6 @@ from database.data_operations import store_prediction_history, get_all_predictio
 
 import logger as log
 
-
-# Load environment variables from .env file
-load_dotenv()
 
 # Create Flask app
 app = Flask(__name__)
@@ -149,10 +145,10 @@ def handle_custom_exception(error, code):
 
 if __name__ == '__main__':
     # Debugging flag
-    debuggable = os.getenv('FLASK_ENV') != 'production'
+    debuggable = os.getenv('APP_ENV') == 'development'
 
     # Configure server before run
-    host = os.getenv('SERVER_HOSTNAME', None)
-    port = os.getenv('SERVER_PORT', None)
+    host = os.getenv('API_HOST', 'localhost')
+    port = os.getenv('API_PORT', '5000')
     
     app.run(host, port, port)

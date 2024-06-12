@@ -1,7 +1,7 @@
 # Compiled and build file
 __pycache__/
 
-# Exlclude virtual python environment
+# Exclude virtual python environment
 venv/
 
 # Exclude database files

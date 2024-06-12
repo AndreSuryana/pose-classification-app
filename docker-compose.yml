@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "${API_PORT}:${API_PORT}"
+    networks:
+      - pose_classification_network
+
+  # TODO: This will be required later for the web app!
+  # web:
+  #   build:
+  #     context: ./web
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "80:80"
+  #   env_file:
+  #     - .env
+  #   networks:
+  #     - pose_classification_network
+
+networks:
+  pose_classification_network:
+    driver: bridge
