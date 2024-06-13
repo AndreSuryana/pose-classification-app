@@ -1,14 +1,33 @@
-# Dockerfile for Flask API
-FROM python:3.10
+# Stage 1: Build Stage
+FROM python:3.10-slim AS build
 
 WORKDIR /app
 
-# Installing python libraries using cache to reduce build time
-COPY requirements.txt ./
-RUN --mount=type=cache,target=/root/.cache/pip pip install -r requirements.txt
+# Install dependencies with cache
+COPY requirements.txt requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    python -m venv /opt/venv && \
+    . /opt/venv/bin/activate && \
+    pip install --no-cache-dir -r requirements.txt
 
+# Copy the application files
 COPY . .
+RUN ls -R /app
 
+# Stage 2: Final Stage
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Copy only the necassary files from the build stage
+COPY --from=build /opt/venv /opt/venv
+COPY --from=build /app /app
+
+# Ensure the virtual environment is used
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Expose the port that the app runs on
 EXPOSE ${API_PORT}
 
+# Run the application
 CMD [ "python", "app.py" ]
