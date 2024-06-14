@@ -1,4 +1,5 @@
 const tf = require('@tensorflow/tfjs');
+require('@tensorflow/tfjs-node');
 const poseDetection = require('@tensorflow-models/pose-detection');
 const { createCanvas, loadImage } = require('canvas');
 const fs = require('fs');
