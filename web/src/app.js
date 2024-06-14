@@ -1,6 +1,8 @@
 const express = require('express');
 const logger = require('./middleware/logger');
 const webRoutes = require('./routes/web');
+const cron = require('node-cron');
+const { cleanupUploads, cleanupProcessedImages } = require('./utils/cleanup');
 
 // Create new express app
 const app = express();
@@ -23,6 +25,13 @@ app.use((req, res, next) => {
 
 // Register routes
 app.use('/', webRoutes);
+
+// Schedule the cleanup to run every day at midnight
+cron.schedule('0 0 * * *', () => {
+    logger.info('Running scheduled cleanup for old images');
+    cleanupProcessedImages();
+    cleanupUploads();
+});
 
 // Start listening
 app.listen(port, () => {
