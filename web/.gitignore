@@ -1,0 +1,10 @@
+# Logs
+logs
+*.logs
+
+# Dependency directory
+node_modules/
+
+# Uploads Directory
+public/processed_images
+public/uploads
