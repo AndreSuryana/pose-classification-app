@@ -1,6 +1,8 @@
 version: '3.8'
 services:
   api:
+    container_name: api
+    image: pose-classification-api:latest
     build:
       context: ./api
       dockerfile: Dockerfile
@@ -11,17 +13,18 @@ services:
     networks:
       - pose_classification_network
 
-  # TODO: This will be required later for the web app!
-  # web:
-  #   build:
-  #     context: ./web
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "80:80"
-  #   env_file:
-  #     - .env
-  #   networks:
-  #     - pose_classification_network
+  web:
+    container_name: web
+    image: pose-classification-web:latest
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    ports:
+      - "${WEB_PORT}:${WEB_PORT}"
+    env_file:
+      - .env
+    networks:
+      - pose_classification_network
 
 networks:
   pose_classification_network:

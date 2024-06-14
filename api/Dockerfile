@@ -8,7 +8,7 @@ COPY requirements.txt requirements.txt
 RUN --mount=type=cache,target=/root/.cache/pip \
     python -m venv /opt/venv && \
     . /opt/venv/bin/activate && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir --timeout=120 -r requirements.txt
 
 # Copy the application files
 COPY . .
