@@ -28,7 +28,7 @@
             <table>
                 <tr>
                     <td><strong>Confidence Rate</strong></td>
-                    <td><%= confidence %></td>
+                    <td><%= (confidence * 100).toFixed(2) %> %</td>
                 </tr>
                 <tr>
                     <td><strong>Predicted Category</strong></td>
@@ -36,11 +36,11 @@
                 </tr>
                 <tr>
                     <td><strong>Model Prediction Time</strong></td>
-                    <td><%= predictionTime %> seconds</td>
+                    <td><%= predictionTime.toFixed(3) %> seconds</td>
                 </tr>
                 <tr>
                     <td><strong>Total Consumed Time</strong></td>
-                    <td><%= consumedTime %> seconds</td>
+                    <td><%= consumedTime.toFixed(3) %> seconds</td>
                 </tr>
             </table>
             <div class="button-container">

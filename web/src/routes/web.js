@@ -75,7 +75,7 @@ router.post('/predict', upload.single('image'), async (req, res) => {
             confidence: response.data.confidence,
             predictedCategory: response.data.prediction,
             predictionTime: response.data.prediction_time,
-            consumedTime: consumedTime.toFixed(3),
+            consumedTime: consumedTime,
         });
     } catch (error) {
         logger.error(`Error fetching data: ${error.message}`);
