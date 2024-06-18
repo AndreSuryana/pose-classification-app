@@ -5,6 +5,28 @@ const { createCanvas, loadImage } = require('canvas');
 const fs = require('fs');
 const logger = require('../middleware/logger');
 
+// Keypoint edges to colors
+const KEYPOINT_EDGE_INDS_TO_COLOR = [
+    { start: 0, end: 1, color: 'magenta' },
+    { start: 0, end: 2, color: 'cyan' },
+    { start: 1, end: 3, color: 'magenta' },
+    { start: 2, end: 4, color: 'cyan' },
+    { start: 0, end: 5, color: 'magenta' },
+    { start: 0, end: 6, color: 'cyan' },
+    { start: 5, end: 7, color: 'magenta' },
+    { start: 7, end: 9, color: 'magenta' },
+    { start: 6, end: 8, color: 'cyan' },
+    { start: 8, end: 10, color: 'cyan' },
+    { start: 5, end: 6, color: 'yellow' },
+    { start: 5, end: 11, color: 'magenta' },
+    { start: 6, end: 12, color: 'cyan' },
+    { start: 11, end: 12, color: 'yellow' },
+    { start: 11, end: 13, color: 'magenta' },
+    { start: 13, end: 15, color: 'magenta' },
+    { start: 12, end: 14, color: 'cyan' },
+    { start: 14, end: 16, color: 'cyan' }
+];
+
 /**
  * Asynchronously loads the MoveNet model if it's not already loaded.
  * If the model is already loaded, this function does nothing.
@@ -117,16 +139,39 @@ const addOverlayToImage = async (imagePath, keypoints) => {
 }
 
 /**
- * Draw keypoints on the given canvas context.
+ * Draw keypoints and connections on the given canvas context.
  * @param {object} ctx - The canvas rendering context.
  * @param {Array} keypoints - The keypoints to draw on the canvas.
  */
 const drawKeypoints = (ctx, keypoints) => {
+    // Validate keypoints
+    if (!Array.isArray(keypoints) || keypoints.length === 0) {
+        throw new Error('Invalid keypoints data');
+    }
+
+    // Draw lines between keypoints
+    KEYPOINT_EDGE_INDS_TO_COLOR.forEach(({ start, end, color }) => {
+        if (keypoints[start] && keypoints[end]) {
+            const [x1, y1] = keypoints[start];
+            const [x2, y2] = keypoints[end];
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x1 * ctx.canvas.width, y1 * ctx.canvas.height);
+            ctx.lineTo(x2 * ctx.canvas.width, y2 * ctx.canvas.height);
+            ctx.stroke();
+        }
+    });
+
+    // Draw keypoints
     ctx.fillStyle = 'blue';
-    keypoints.forEach(([x, y]) => {
-        ctx.beginPath();
-        ctx.arc(x * ctx.canvas.width, y * ctx.canvas.height, 5, 0, 2 * Math.PI);
-        ctx.fill();
+    keypoints.forEach(keypoint => {
+        if (Array.isArray(keypoint) && keypoint.length >= 2) {
+            const [x, y] = keypoint;
+            ctx.beginPath();
+            ctx.arc(x * ctx.canvas.width, y * ctx.canvas.height, 5, 0, 2 * Math.PI);
+            ctx.fill();
+        }
     });
 }
 
