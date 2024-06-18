@@ -5,6 +5,26 @@ const { createCanvas, loadImage } = require('canvas');
 const fs = require('fs');
 const logger = require('../middleware/logger');
 
+// Global variable for the MoveNet detector
+let detector = null
+
+/**
+ * Asynchronously loads the MoveNet model if it's not already loaded.
+ * If the model is already loaded, this function does nothing.
+ * @returns {Promise<void>} - A promise that resolves when the model is loaded or if it's already loaded.
+ * @throws Will throw an error if model loading fails.
+ */
+const loadMoveNetModel = async () => {
+    if (!detector) {
+        logger.info('Loading MoveNet model...');
+        detector = await poseDetection.createDetector(
+            poseDetection.SupportedModels.MoveNet, {
+            modelType: poseDetection.movenet.modelType.SINGLEPOSE_THUNDER,
+        });
+        logger.info('MoveNet model loaded successfully...');
+    }
+}
+
 /**
  * Detect keypoints in the given image using MoveNet model.
  * @param {string} imagePath - The path to the image file.
@@ -15,17 +35,14 @@ const detectKeypoints = async (imagePath) => {
     try {
         logger.info(`Starting keypoints detection for image: ${imagePath}`);
 
+        // Load the MoveNet model asynchronously if not already loaded
+        await loadMoveNetModel();
+
         // Load the image
         const image = await loadImage(imagePath);
         const canvas = createCanvas(image.width, image.height);
         const ctx = canvas.getContext('2d');
         ctx.drawImage(image, 0, 0, image.width, image.height);
-
-        // Create the MoveNet detector
-        const detector = await poseDetection.createDetector(
-            poseDetection.SupportedModels.MoveNet, {
-            modelType: poseDetection.movenet.modelType.SINGLEPOSE_THUNDER,
-        });
 
         // Estimate poses to retrieve the keypoints
         const poses = await detector.estimatePoses(canvas);
