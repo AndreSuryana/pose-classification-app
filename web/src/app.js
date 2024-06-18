@@ -3,6 +3,7 @@ const logger = require('./middleware/logger');
 const webRoutes = require('./routes/web');
 const cron = require('node-cron');
 const { cleanupUploads, cleanupProcessedImages } = require('./utils/cleanup');
+const { initializeMoveNetModel } = require('./movenet/movenet');
 
 // Create new express app
 const app = express();
@@ -33,7 +34,18 @@ cron.schedule('0 0 * * *', () => {
     cleanupUploads();
 });
 
-// Start listening
-app.listen(port, () => {
-    logger.info(`Server is running on port ${port}`);
-})
+// Initialize MoveNet detector before application started
+initializeMoveNetModel()
+    .then(detector => {
+        // Store the initialized detector in a global variable
+        global.detector = detector;
+
+        // Start listening after detector initialized
+        app.listen(port, () => {
+            logger.info(`Server is running on port ${port}`);
+        })
+    })
+    .catch(err => {
+        logger.error(`Error initializing MoveNet detector: ${err.message}`);
+        process.exit(1);
+    });

@@ -47,17 +47,28 @@ router.post('/predict', upload.single('image'), async (req, res) => {
 
         // Process image using MoveNet model to retrieve keypoints
         const keypoints = await detectKeypoints(imagePath);
-        var processedImagePath = await addOverlayToImage(imagePath, keypoints)
+        const keypointsProcessedTime = Date.now();
 
-        // Remove the 'public' directory because it already configure as static folder
+        // Add overlay to the image based on keypoints
+        var processedImagePath = await addOverlayToImage(imagePath, keypoints);
+        const overlayAddedTime = Date.now();
+
+        // Remove the 'public' directory because it's already configured as a static folder
         processedImagePath = processedImagePath.replace('public/', '');
 
         // Predict keypoints using the API
         const response = await axios.post(`${config.API_BASE_URL}/predict`, { keypoints });
-        logger.info(`Prediction result: ${JSON.stringify(response.data)}`);
+        const apiPredictionTime = Date.now();
 
         // Calculate consumed time in seconds
-        const consumedTime = (Date.now() - startTime) / 1000;
+        const consumedTime = (apiPredictionTime - startTime) / 1000;
+
+        // Logging
+        logger.info(`Response: ${JSON.stringify(response.data)}`);
+        logger.info(`Time taken to process keypoints: ${keypointsProcessedTime - startTime}ms`);
+        logger.info(`Time taken to add overlay: ${overlayAddedTime - keypointsProcessedTime}ms`);
+        logger.info(`Time taken for API prediction: ${apiPredictionTime - overlayAddedTime}ms`);
+        logger.info(`Total time consumed: ${consumedTime}`);
 
         res.render('result', {
             processedImage: processedImagePath,
