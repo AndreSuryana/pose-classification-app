@@ -1,15 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pose Classification App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
 </head>
+
 <body>
-    <h1>Upload Image for Processing</h1>
-    <form id="form-upload" action="/predict" method="POST" enctype="multipart/form-data">
-        <input type="file" id="image-upload" name="image" accept="image/*" required>
-        <button type="submit">Process</button>
-    </form>
+    <header>
+        <div class="app-header">
+            <img src="/path/to/icon.png" alt="App Icon" class="app-icon">
+            <h1 class="app-name">Pose Classification App</h1>
+        </div>
+    </header>
+    <div class="container">
+        <h2>Upload Image for Processing</h2>
+        <form id="form-upload" action="/predict" method="POST" enctype="multipart/form-data">
+            <input type="file" id="image-upload" name="image" accept="image/*" required>
+            <button type="submit" id="button-process">
+                <span class="button-text">Process</span>
+                <div class="loader hidden"></div>
+            </button>
+        </form>
+        <p>Upload an image to get the pose classification results. Supported formats: JPG, PNG.</p>
+    </div>
+
+    <script src="/js/script.js"></script>
 </body>
+
 </html>
