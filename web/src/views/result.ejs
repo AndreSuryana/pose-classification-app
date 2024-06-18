@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Result</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <header>
+        <div class="app-header">
+            <img src="/icon.png" alt="App Icon" class="app-icon">
+            <h1 class="app-name">Pose Classification App</h1>
+        </div>
+    </header>
+    <div class="container result-container">
+        <div class="image-section">
+            <h2>Processed Image</h2>
+            <div class="image-container">
+                <img src="<%= processedImage %>" alt="Processed Image">
+            </div>
+        </div>
+        <div class="result-details">
+            <h2>Result Detail</h2>
+            <table>
+                <tr>
+                    <td><strong>Confidence Rate</strong></td>
+                    <td><%= (confidence * 100).toFixed(2) %> %</td>
+                </tr>
+                <tr>
+                    <td><strong>Predicted Category</strong></td>
+                    <td><%= predictedCategory %></td>
+                </tr>
+                <tr>
+                    <td><strong>Model Prediction Time</strong></td>
+                    <td><%= predictionTime.toFixed(3) %> seconds</td>
+                </tr>
+                <tr>
+                    <td><strong>Total Consumed Time</strong></td>
+                    <td><%= consumedTime.toFixed(3) %> seconds</td>
+                </tr>
+            </table>
+            <div class="button-container">
+                <button type="button" onclick="window.location.href = '/'">Back to Main</button>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

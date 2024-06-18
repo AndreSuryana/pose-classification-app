@@ -1,11 +1,12 @@
-# CNN Pose Classification Application
+# Pose Classification Application
 
-This Flask application utilizes a Convolutional Neural Network (CNN) model to predict keypoints of a person's body and classify them into different posture categories. It also provides functionalities for storing and retrieving prediction history in a SQLite database.
+This application utilizes a Convolutional Neural Network (CNN) model to predict keypoints of a person's body and classify them into different posture categories. It provides a web interface for uploading images and viewing predictions, as well as functionalities for storing and retrieving prediction history.
 
 
 ## Prerequisites
 
 - Python 3.x installed on the system
+- Node.js and npm installed on the system
 - Virtual environment (optional, but recommended)
 
 
@@ -13,37 +14,50 @@ This Flask application utilizes a Convolutional Neural Network (CNN) model to pr
 
 1. **Clone the repository:**
     ```bash
-    git clone https://github.com/AndreSuryana/pose-classification-api.git
-    cd pose-classification-api
+    git clone https://github.com/AndreSuryana/pose-classification-app.git
+    cd pose-classification-app
     ```
 
-2. **Create and activate a virtual environment** (optional but recommended):
-    ```bash
-    python3 -m venv venv
-    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-    ```
+2. **Backend Setup (Python):**
+    
+    - **Create and activate a virtual environment** (optional, but recommended):
+        ```bash
+        python3 -m venv venv
+        source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+        ```
 
-3. **Install the required Python packages:**
-    ```bash
-    pip install -r requirements.txt
-    ```
+    - **Install the required Python packages:**
+        ```bash
+        pip install -r requirements.txt
+        ```
+3. **Frontend Setup (Node.js):**
 
+    - **Navigate to the web directory:**
+        ```bash
+        cd web
+        ```
 
-### Configuration
-
-
+    - **Install the required Node.js packages:**
+        ```bash
+        npm install
+        ```
 
 
 ### Running the Application
 
-1. **Start the Flask application:**
+1. **Start the Flask backend application:**
     ```bash
-    python3 app.py
+    python3 app.py # Or use `flask run` command
     ```
-    or
+
+2. **Start the Node.js frontend application:**
     ```bash
-    flask run
+    cd web
+    npm run start
     ```
+
+3. **Access the web application:**
+    Open your browser and navigate to `http://localhost:3000`
 
 
 ## Example API Requests
