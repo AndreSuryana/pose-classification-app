@@ -43,7 +43,7 @@ header {
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    max-width: 800px;
+    max-width: 70%;
     width: 100%;
     margin-top: 20px;
     text-align: center;
@@ -128,30 +128,22 @@ p {
     box-sizing: border-box; /* Ensure padding is included in the element's width and height */
 }
 
-.image-section {
-    flex: 1;
-    margin-right: 20px;
-    margin-bottom: 20px;
-    width: 100%;
-    max-width: 400px;
-    box-sizing: border-box; /* Ensure padding is included in the element's width and height */
-}
-
 .image-container {
     width: 100%;
-    height: 400px;
+    max-width: 500px;
+    height: auto;
     overflow: hidden;
     display: flex;
     justify-content: center;
     align-items: center;
     border: 1px solid #ddd;
     border-radius: 8px;
-    margin: 0 auto;
+    margin-right: 20px;
 }
 
 .image-container img {
     max-width: 100%;
-    max-height: 100%;
+    max-height: auto;
     object-fit: contain;
 }
 
