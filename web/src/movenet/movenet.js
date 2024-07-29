@@ -151,16 +151,22 @@ const drawKeypoints = (ctx, keypoints) => {
         throw new Error('Invalid keypoints data');
     }
 
+    // Define scaling factors
+    const imageWidth = ctx.canvas.width;
+    const imageHeight = ctx.canvas.height;
+    const lineWidthFactor = 0.01; // Line width as a percentage of image width
+    const keypointRadiusFactor = 0.0125 ; // Keypoint radius as a percentage of image height
+
     // Draw lines between keypoints
     KEYPOINT_EDGE_INDS_TO_COLOR.forEach(({ start, end, color }) => {
         if (keypoints[start] && keypoints[end]) {
             const [x1, y1] = keypoints[start];
             const [x2, y2] = keypoints[end];
             ctx.strokeStyle = color;
-            ctx.lineWidth = 12;
+            ctx.lineWidth = imageWidth * lineWidthFactor; // Scale line width
             ctx.beginPath();
-            ctx.moveTo(x1 * ctx.canvas.width, y1 * ctx.canvas.height);
-            ctx.lineTo(x2 * ctx.canvas.width, y2 * ctx.canvas.height);
+            ctx.moveTo(x1 * imageWidth, y1 * imageHeight);
+            ctx.lineTo(x2 * imageWidth, y2 * imageHeight);
             ctx.stroke();
         }
     });
@@ -170,8 +176,9 @@ const drawKeypoints = (ctx, keypoints) => {
     keypoints.forEach(keypoint => {
         if (Array.isArray(keypoint) && keypoint.length >= 2) {
             const [x, y] = keypoint;
+            const radius = imageHeight * keypointRadiusFactor; // Scale keypoint radius
             ctx.beginPath();
-            ctx.arc(x * ctx.canvas.width, y * ctx.canvas.height, 25, 0, 2 * Math.PI);
+            ctx.arc(x * imageWidth, y * imageHeight, radius, 0, 2 * Math.PI);
             ctx.fill();
         }
     });
