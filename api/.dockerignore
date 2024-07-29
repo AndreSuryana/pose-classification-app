@@ -10,6 +10,9 @@
 # Ignore the virtual environment
 venv
 
+# Ignore directories
+uploads/
+
 # Ignore Docker-related files
 Dockerfile
 .dockerignore

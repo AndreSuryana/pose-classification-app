@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, make_response
-from werkzeug.exceptions import HTTPException, BadRequest
+from werkzeug.exceptions import HTTPException, BadRequest, InternalServerError
+from werkzeug.utils import secure_filename
 from pydantic import BaseModel, ValidationError, conlist
 from typing import List
 
@@ -12,9 +13,11 @@ from io import BytesIO
 
 import os
 import time
+import threading
 
-from helper import preprocess_keypoints, load_categories
+from helper import preprocess_keypoints, check_allowed_files
 from database.data_operations import store_prediction_history, get_all_prediction_history
+from database.connection import Database
 
 import logger as log
 
@@ -22,16 +25,73 @@ import logger as log
 # Create Flask app
 app = Flask(__name__)
 
-# Load the TensorFlow model and class labels (categories)
-base_dir = os.path.dirname(os.path.abspath(__file__))
-model_file_path = os.path.join(base_dir, 'cnn', 'model.keras')
-class_file_path = os.path.join(base_dir, 'cnn', 'categories.txt')
-model = tf.keras.models.load_model(model_file_path)
-categories = load_categories(class_file_path)
+# File Uploads Configurations
+UPLOAD_FOLDER = 'uploads'
+MODEL_ALLOWED_EXTENSIONS = {'keras'}
+CATEGORY_ALLOWED_EXTENSIONS = {'txt'}
 
-# Fit the LabelEncoder with the class labels
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Ensure the upload folder exists
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+# Global variables to store the model and categories
+model = None
 label_encoder = LabelEncoder()
-label_encoder.fit(categories)
+categories = []
+
+def load_latest_model_and_categories():
+    global model, categories, label_encoder
+
+    conn = Database().get_connection()
+    cursor = conn.cursor()
+
+    try:
+        # Fetch the latest model and its categories from the database
+        cursor.execute("""
+            SELECT models.model_path, categories.category_name
+            FROM models
+            JOIN categories ON models.id = categories.model_id
+            ORDER BY models.timestamp DESC, categories.timestamp DESC
+        """)
+        rows = cursor.fetchall()
+
+        if rows:
+            model_path = rows[0][0]
+            categories = [row[1].strip() for row in rows]
+
+            # Load the latest model
+            model = tf.keras.models.load_model(model_path)
+
+            # Fit the LabelEncoder with the latest categories
+            label_encoder.fit(categories)
+
+            log.i("Latest model and categories loaded successfully")
+        else:
+            log.w("No model found in the database. The application will start without a model.")
+    
+    except Exception as e:
+        log.e(f"Failed to load latest model and categories: {str(e)}")
+    
+    finally:
+        conn.close()
+
+def load_model_and_categories(model_path, category_lines):
+    global model, categories, label_encoder
+
+    try:
+        # Load the TensorFlow model
+        model = tf.keras.models.load_model(model_path)
+
+        # Update the categories
+        categories = [line.strip() for line in category_lines]
+        label_encoder.fit(categories)
+
+        log.i("Model and categories loaded successfully")
+
+    except Exception as e:
+        log.e(f"Failed to load model and categories: {str(e)}")
 
 # Define request schema for prediction request
 class PredictRequest(BaseModel):
@@ -40,6 +100,10 @@ class PredictRequest(BaseModel):
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
+        # Check for model initialization
+        if model is None:
+            raise InternalServerError("Model is not initialized. Please update the model.")
+
         # Parse and validate the request data
         data = PredictRequest(**request.get_json())
         
@@ -89,6 +153,80 @@ def predict():
     except ValidationError as e:
         # ValidationError return a list of error, just use the first error found
         return handle_custom_exception(e.errors()[0]['msg'], 403)
+
+@app.route('/model-update', methods=['POST'])
+def model_update():
+    # Ensure 'model' and 'category' keys are in the request
+    if 'model' not in request.files or 'category' not in request.files:
+        raise BadRequest("Missing 'model' or 'category' file part")
+    
+    # Retrieve the request files
+    model_file = request.files['model']
+    category_file = request.files['category']
+
+    # Ensure there are selected files in the request
+    if model_file.filename == '':
+        raise BadRequest("No selected file for 'model'")
+    elif category_file.filename == '':
+        raise BadRequest("No selected file for 'category'")
+    
+    # Validate the 'model' file extension
+    if not check_allowed_files(model_file.filename, MODEL_ALLOWED_EXTENSIONS):
+        raise BadRequest(f"Invalid file type for 'model': {model_file.filename}. Expected .keras")
+
+    # Validate the 'category' file extension
+    if not check_allowed_files(category_file.filename, CATEGORY_ALLOWED_EXTENSIONS):
+        raise BadRequest(f"Invalid file type for 'category': {category_file.filename}. Expected .txt")
+
+    # Check that the 'category' file is not empty and store each line into an array
+    category_file_content = category_file.read().decode('utf-8').strip()
+    if not category_file_content:
+        raise BadRequest("'category' file is empty")
+
+    category_lines = category_file_content.split('\n')
+    if not category_lines:
+        raise BadRequest("'category' file contains no lines")
+    
+    # Reset the file pointer to the beginning after reading
+    category_file.seek(0)
+    
+    # Process the 'model' file
+    model_filename = secure_filename(model_file.filename)
+    model_path = os.path.join(app.config['UPLOAD_FOLDER'], model_filename)
+
+    conn = None
+    try:
+        # Save the model file into the upload folder
+        model_file.save(model_path)
+
+        # Connect to the database
+        conn = Database().get_connection()
+        cursor = conn.cursor()
+
+        # Insert the model path into the 'models' table
+        cursor.execute("INSERT INTO models (model_path, timestamp) VALUES (?, datetime('now'))", (model_path,))
+        model_id = cursor.lastrowid
+
+        # Insert the categories into the 'categories' table
+        for category in category_lines:
+            cursor.execute("INSERT INTO categories (model_id, category_name, timestamp) VALUES (?, ?, datetime('now'))", (model_id, category))
+        
+        # Commit the transaction
+        conn.commit()
+
+        # Start the background thread to load the latest model and categories
+        threading.Thread(target=load_model_and_categories, args=(model_path, category_lines)).start()
+
+        return jsonify({"message": "Model and categories update initiated"}), 201
+    
+    except Exception as e:
+        if conn:
+            conn.rollback() # Rollback any changes if an errors occurs
+        raise InternalServerError(f"Failed to update model and categories: {str(e)}")
+
+    finally:
+        if conn:
+            conn.close()
 
 @app.route('/history', methods=['GET'])
 def get_prediction_history():
@@ -150,5 +288,8 @@ if __name__ == '__main__':
     # Configure server before run
     host = os.getenv('API_HOST', 'localhost')
     port = os.getenv('API_PORT', '5000')
+
+    # Ensure the latest model and categories are loaded at startup
+    load_latest_model_and_categories()
     
-    app.run(host, port, port)
+    app.run(host, port, debuggable)

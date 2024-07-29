@@ -89,16 +89,5 @@ def preprocess_keypoints(keypoints):
     return features
 
 
-def load_categories(file_path):
-    """
-    Loads a list of categories from a specified text file.
-
-    Parameters:
-    - file_path (str): Path to the text file containing category names.
-
-    Returns:
-    - categories (list of str): List of categories.
-    """
-    with open(file_path, 'r') as file:
-        categories = [line.strip() for line in file]
-    return categories
+def check_allowed_files(filename, allowed_extensions):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions

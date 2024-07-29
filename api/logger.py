@@ -5,6 +5,7 @@ import time
 LOG_LEVELS = {
     'DEBUG': 10,
     'INFO': 20,
+    'WARNING': 25,
     'ERROR': 30,
     'ALL': 0,  # 'ALL' means all log levels will be logged
 }
@@ -13,6 +14,7 @@ LOG_LEVELS = {
 COLORS = {
     'DEBUG': '',
     'INFO': '\033[34m',  # Blue
+    'WARNING': '\033[33m',  # Yellow
     'ERROR': '\033[31m',  # Red
     'RESET': '\033[0m'  # Reset to default color
 }
@@ -42,5 +44,8 @@ def d(message, *args):
 def i(message, *args):
     log_message(LOG_LEVELS['INFO'], 'INFO', message, *args)
 
+def w(message, *args):
+    log_message(LOG_LEVELS['WARNING'], 'WARNING', message, *args)
+    
 def e(message, *args):
     log_message(LOG_LEVELS['ERROR'], 'ERROR', message, *args)

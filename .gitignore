@@ -1,8 +1,7 @@
-# Compiled and build file
+# Excluded directories
 __pycache__/
-
-# Exclude virtual python environment
 venv/
+uploads/
 
 # Exclude database files
 *.db
