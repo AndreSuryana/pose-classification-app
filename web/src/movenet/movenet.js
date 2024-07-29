@@ -1,5 +1,4 @@
-const tf = require('@tensorflow/tfjs');
-require('@tensorflow/tfjs-node');
+const tf = require('@tensorflow/tfjs-node');
 const poseDetection = require('@tensorflow-models/pose-detection');
 const { createCanvas, loadImage } = require('canvas');
 const fs = require('fs');
@@ -71,6 +70,9 @@ const detectKeypoints = async (imagePath) => {
         const poses = await detector.estimatePoses(canvas);
         const keypoints = extractKeypoints(poses, image.width, image.height);
         logger.info(`Keypoints detected: ${JSON.stringify(keypoints)}`);
+
+        // Cleanup
+        tf.disposeVariables(); // Dispose all tensors to free up memory
 
         return keypoints;
     } catch (error) {
