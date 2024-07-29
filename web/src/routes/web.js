@@ -1,10 +1,12 @@
 const express = require('express');
 const multer = require('multer');
 const fs = require('fs');
+const path = require('path');
 const axios = require('axios');
 const logger = require('../middleware/logger');
 const config = require('../config');
-const { detectKeypoints, addOverlayToImage } = require('../movenet/movenet');
+const { detectKeypoints, addOverlayToImage, resizeImage } = require('../movenet/movenet');
+const { loadImage } = require('canvas');
 
 const router = express.Router();
 
@@ -39,11 +41,22 @@ router.post('/predict', upload.single('image'), async (req, res) => {
         // Record start time
         const startTime = Date.now();
 
-        // Retrieve the image file and save it locally
+        // Retrieve the image file buffer
         const imageBuffer = req.file.buffer;
+
+        // Load the image from buffer
+        const image = await loadImage(imageBuffer);
+
+        // Resize the image if it's too large
+        const maxWidth = 1024; // Define maximum width
+        const maxHeight = 1024; // Define maximum height
+        const resizedCanvas = await resizeImage(image, maxWidth, maxHeight);
+        const resizedImageBuffer = resizedCanvas.toBuffer('image/jpeg');
+
+        // Save the resized image locally
         const imageFileName = `image_${Date.now()}.jpg`;
-        const imagePath = `${uploadsDir}/${imageFileName}`;
-        fs.writeFileSync(imagePath, imageBuffer);
+        const imagePath = path.join(uploadsDir, imageFileName);
+        fs.writeFileSync(imagePath, resizedImageBuffer);
 
         // Process image using MoveNet model to retrieve keypoints
         const keypoints = await detectKeypoints(imagePath);
@@ -69,6 +82,15 @@ router.post('/predict', upload.single('image'), async (req, res) => {
         logger.info(`Time taken to add overlay: ${overlayAddedTime - keypointsProcessedTime}ms`);
         logger.info(`Time taken for API prediction: ${apiPredictionTime - overlayAddedTime}ms`);
         logger.info(`Total time consumed: ${consumedTime}`);
+
+        // Clearing files
+        fs.unlink(imagePath, (err) => {
+            if (err) {
+                logger.error(`Error deleting file ${imagePath}: ${err.message}`);
+            } else {
+                logger.info(`Deleted file: ${imagePath}`);
+            }
+        });
 
         res.render('result', {
             processedImage: processedImagePath,

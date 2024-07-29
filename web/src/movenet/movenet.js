@@ -184,8 +184,46 @@ const drawKeypoints = (ctx, keypoints) => {
     });
 }
 
+/**
+ * Resize the image while maintaining its aspect ratio.
+ * @param {object} image - The image to resize.
+ * @param {number} maxWidth - The maximum width of the resized image.
+ * @param {number} maxHeight - The maximum height of the resized image.
+ * @returns {object} - The resized image as a canvas object.
+ */
+const resizeImage = async (image, maxWidth, maxHeight) => {
+    const canvas = createCanvas(maxWidth, maxHeight);
+    const ctx = canvas.getContext('2d');
+
+    // Calculate aspect ratios
+    const imageAspect = image.width / image.height;
+    const canvasAspect = maxWidth / maxHeight;
+
+    let drawWidth, drawHeight, offsetX, offsetY;
+
+    if (imageAspect > canvasAspect) {
+        // Image is wider than the canvas
+        drawWidth = maxWidth;
+        drawHeight = maxWidth / imageAspect;
+        offsetX = 0;
+        offsetY = (maxHeight - drawHeight) / 2;
+    } else {
+        // Image is taller than the canvas or fits the canvas
+        drawWidth = maxHeight * imageAspect;
+        drawHeight = maxHeight;
+        offsetX = (maxWidth - drawWidth) / 2;
+        offsetY = 0;
+    }
+
+    // Draw the image on the canvas, cropping as needed
+    ctx.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
+
+    return canvas;
+}
+
 module.exports = {
     initializeMoveNetModel,
     detectKeypoints,
-    addOverlayToImage
+    addOverlayToImage,
+    resizeImage
 }
