@@ -25,8 +25,11 @@ import logger as log
 # Create Flask app
 app = Flask(__name__)
 
+# Define the base directory
+base_dir = os.path.dirname(os.path.abspath(__file__))
+
 # File Uploads Configurations
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = os.path.join(base_dir, 'uploads')
 MODEL_ALLOWED_EXTENSIONS = {'keras'}
 CATEGORY_ALLOWED_EXTENSIONS = {'txt'}
 
