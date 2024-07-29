@@ -155,7 +155,7 @@ const drawKeypoints = (ctx, keypoints) => {
             const [x1, y1] = keypoints[start];
             const [x2, y2] = keypoints[end];
             ctx.strokeStyle = color;
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 12;
             ctx.beginPath();
             ctx.moveTo(x1 * ctx.canvas.width, y1 * ctx.canvas.height);
             ctx.lineTo(x2 * ctx.canvas.width, y2 * ctx.canvas.height);
@@ -169,7 +169,7 @@ const drawKeypoints = (ctx, keypoints) => {
         if (Array.isArray(keypoint) && keypoint.length >= 2) {
             const [x, y] = keypoint;
             ctx.beginPath();
-            ctx.arc(x * ctx.canvas.width, y * ctx.canvas.height, 5, 0, 2 * Math.PI);
+            ctx.arc(x * ctx.canvas.width, y * ctx.canvas.height, 25, 0, 2 * Math.PI);
             ctx.fill();
         }
     });
