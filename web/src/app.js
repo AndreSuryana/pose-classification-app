@@ -42,12 +42,12 @@ initializeMoveNetModel()
 
         // Start listening after detector initialized
         app.listen(port, () => {
-            logger.info(`Server is running on port ${port}`);
+            logger.debug(`Server is running on port ${port}`);
         })
 
         // Graceful shutdown
         const shutdown = () => {
-            logger.info('Received shutdown signal, shutting down gracefully...');
+            logger.warn('Received shutdown signal, shutting down gracefully...');
             server.close(err => {
                 if (err) {
                     logger.error(`Error during server shutdown: ${err.message}`);

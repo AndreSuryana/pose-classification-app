@@ -133,7 +133,7 @@ const addOverlayToImage = async (imagePath, keypoints) => {
         stream.pipe(out);
 
         out.on('finish', () => {
-            logger.info(`Processed image saved at: ${processedImagePath}`);
+            logger.debug(`Processed image saved at: ${processedImagePath}`);
         });
 
         return processedImagePath;

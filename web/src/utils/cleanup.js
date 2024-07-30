@@ -17,7 +17,7 @@ const deleteAllFiles = (directory) => {
                 if (err) {
                     logger.error(`Error deleting file ${filePath}: ${err.message}`);
                 } else {
-                    logger.info(`Deleted file: ${filePath}`);
+                    logger.debug(`Deleted file: ${filePath}`);
                 }
             });
         });

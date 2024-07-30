@@ -78,17 +78,17 @@ router.post('/predict', upload.single('image'), async (req, res) => {
 
         // Logging
         logger.info(`Response: ${JSON.stringify(response.data)}`);
-        logger.info(`Time taken to process keypoints: ${keypointsProcessedTime - startTime}ms`);
-        logger.info(`Time taken to add overlay: ${overlayAddedTime - keypointsProcessedTime}ms`);
-        logger.info(`Time taken for API prediction: ${apiPredictionTime - overlayAddedTime}ms`);
-        logger.info(`Total time consumed: ${consumedTime}`);
+        logger.debug(`Time taken to process keypoints: ${keypointsProcessedTime - startTime}ms`);
+        logger.debug(`Time taken to add overlay: ${overlayAddedTime - keypointsProcessedTime}ms`);
+        logger.debug(`Time taken for API prediction: ${apiPredictionTime - overlayAddedTime}ms`);
+        logger.debug(`Total time consumed: ${consumedTime}`);
 
         // Clearing files
         fs.unlink(imagePath, (err) => {
             if (err) {
                 logger.error(`Error deleting file ${imagePath}: ${err.message}`);
             } else {
-                logger.info(`Deleted file: ${imagePath}`);
+                logger.debug(`Deleted file: ${imagePath}`);
             }
         });
 
