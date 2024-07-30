@@ -11,6 +11,9 @@ services:
       - "${API_PORT}:${API_PORT}"
     networks:
       - pose_classification_network
+    volumes:
+      - api_db_data:/api/database
+      - api_uploads:/api/uploads
 
   web:
     container_name: web
@@ -24,7 +27,16 @@ services:
       - .env
     networks:
       - pose_classification_network
+    volumes:
+      - web_logs:/web/logs
+      - web_public_uploads:/web/public/uploads
 
 networks:
   pose_classification_network:
     driver: bridge
+
+volumes:
+  api_db_data:
+  api_uploads:
+  web_logs:
+  web_public_uploads:
