@@ -29,5 +29,8 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Expose the port that the app runs on
 EXPOSE ${API_PORT}
 
+# Run the application with Gunicorn
+CMD [ "sh", "-c", "gunicorn -w 1 -k sync -b ${API_HOST}:${API_PORT} app:app" ]
+
 # Run the application
-CMD [ "python", "app.py" ]
+# CMD [ "python", "app.py" ]
