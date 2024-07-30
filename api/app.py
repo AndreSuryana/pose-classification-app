@@ -10,6 +10,7 @@ from sklearn.preprocessing import LabelEncoder
 
 import pandas as pd
 from io import BytesIO
+import gc
 
 import os
 import time
@@ -36,8 +37,7 @@ CATEGORY_ALLOWED_EXTENSIONS = {'txt'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Ensure the upload folder exists
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Global variables to store the model and categories
 model = None
@@ -45,32 +45,30 @@ label_encoder = LabelEncoder()
 categories = []
 
 def load_latest_model_and_categories():
-    global model, categories, label_encoder
-
-    conn = Database().get_connection()
-    cursor = conn.cursor()
-
+    """Load the latest model and categories from the database."""
+    conn = None
     try:
+        conn = Database().get_connection()
+        cursor = conn.cursor()
+
         # Fetch the latest model and its categories from the database
         cursor.execute("""
-            SELECT models.model_path, categories.category_name
+            SELECT models.model_path, GROUP_CONCAT(categories.category_name, ',')
             FROM models
             JOIN categories ON models.id = categories.model_id
-            ORDER BY models.timestamp DESC, categories.timestamp DESC
+            WHERE models.timestamp = (SELECT MAX(timestamp) FROM models)
+            GROUP BY models.model_path
         """)
-        rows = cursor.fetchall()
+        row = cursor.fetchone()
 
-        if rows:
-            model_path = rows[0][0]
-            categories = [row[1].strip() for row in rows]
+        if row:
+            model_path = row[0]
+            category_line = row[1]
+            categories = category_line.split(',')
 
-            # Load the latest model
-            model = tf.keras.models.load_model(model_path)
+            # Load the model and categories
+            load_model_and_categories(model_path, categories)
 
-            # Fit the LabelEncoder with the latest categories
-            label_encoder.fit(categories)
-
-            log.i("Latest model and categories loaded successfully")
         else:
             log.w("No model found in the database. The application will start without a model.")
     
@@ -78,9 +76,11 @@ def load_latest_model_and_categories():
         log.e(f"Failed to load latest model and categories: {str(e)}")
     
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 def load_model_and_categories(model_path, category_lines):
+    """Load the TensorFlow model and fit the label encoder with the categories."""
     global model, categories, label_encoder
 
     try:
@@ -146,6 +146,12 @@ def predict():
 
         # Store the prediction result and keypoints in the database
         store_prediction_history(predictions, predicted_category, confidence, prediction_time, keypoints)
+
+        # Trigger garbage collection
+        gc.collect()
+
+        # Clear TensorFlow session to free up memory
+        tf.keras.backend.clear_session()
 
         return jsonify({
             'prediction': predicted_category,
