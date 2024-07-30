@@ -44,6 +44,22 @@ initializeMoveNetModel()
         app.listen(port, () => {
             logger.info(`Server is running on port ${port}`);
         })
+
+        // Graceful shutdown
+        const shutdown = () => {
+            logger.info('Received shutdown signal, shutting down gracefully...');
+            server.close(err => {
+                if (err) {
+                    logger.error(`Error during server shutdown: ${err.message}`);
+                    process.exit(1);
+                }
+                logger.info('Server closed successfully');
+                process.exit(0);
+            });
+        };
+
+        process.on('SIGTERM', shutdown);
+        process.on('SIGINT', shutdown);
     })
     .catch(err => {
         logger.error(`Error initializing MoveNet detector: ${err.message}`);
