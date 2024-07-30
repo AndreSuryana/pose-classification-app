@@ -71,13 +71,12 @@ const detectKeypoints = async (imagePath) => {
         const keypoints = extractKeypoints(poses, image.width, image.height);
         logger.info(`Keypoints detected: ${JSON.stringify(keypoints)}`);
 
-        // Cleanup
-        tf.disposeVariables(); // Dispose all tensors to free up memory
-
         return keypoints;
     } catch (error) {
         logger.error(`Error processing image: ${error.message}`);
         throw new Error(`Error processing image: ${error.message}`);
+    } finally {
+        tf.dispose(); // Dispose all tensors to free up memory
     }
 }
 
@@ -129,9 +128,13 @@ const addOverlayToImage = async (imagePath, keypoints) => {
 
         // Save the processed image
         const processedImagePath = `${uploadsDir}/${Date.now()}_processed.jpg`;
-        const processedImageBuffer = canvas.toBuffer('image/jpeg');
-        fs.writeFileSync(processedImagePath, processedImageBuffer);
-        logger.info(`Processed image saved at: ${processedImagePath}`);
+        const out = fs.createWriteStream(processedImagePath);
+        const stream = canvas.createJPEGStream();
+        stream.pipe(out);
+
+        out.on('finish', () => {
+            logger.info(`Processed image saved at: ${processedImagePath}`);
+        });
 
         return processedImagePath;
     } catch (error) {
