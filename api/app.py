@@ -26,18 +26,11 @@ import logger as log
 # Create Flask app
 app = Flask(__name__)
 
-# Define the base directory
-base_dir = os.path.dirname(os.path.abspath(__file__))
-
 # File Uploads Configurations
-UPLOAD_FOLDER = os.path.join(base_dir, 'uploads')
-MODEL_ALLOWED_EXTENSIONS = {'keras'}
-CATEGORY_ALLOWED_EXTENSIONS = {'txt'}
-
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
 
 # Ensure the upload folder exists
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # Global variables to store the model and categories
 model = None
@@ -62,12 +55,10 @@ def load_latest_model_and_categories():
         row = cursor.fetchone()
 
         if row:
-            model_path = row[0]
-            category_line = row[1]
-            categories = category_line.split(',')
-
             # Load the model and categories
-            load_model_and_categories(model_path, categories)
+            # - First column -> model_path
+            # - Second column -> categories, format: category_1, category_2, etc.
+            load_model_and_categories(row[0], row[1].split(','))
 
         else:
             log.w("No model found in the database. The application will start without a model.")
@@ -110,11 +101,8 @@ def predict():
         # Parse and validate the request data
         data = PredictRequest(**request.get_json())
         
-        # Convert into numpy array
-        keypoints = np.array(data.keypoints)
-
-        # Prepare feature for prediction
-        features = preprocess_keypoints(keypoints)
+        # Convert into numpy array and prepare feature for prediction
+        features = preprocess_keypoints(np.array(data.keypoints))
 
         # Start time before the prediction
         start_time = time.time()
@@ -124,17 +112,12 @@ def predict():
         log.d('Features: ', features)
         predictions = model.predict(features)
 
-        # End time after the prediction
-        end_time = time.time()
-
         # Calculate the elapsed prediction time
-        prediction_time = round(end_time - start_time, 6)
+        prediction_time = round(time.time() - start_time, 6)
 
-        # Get the index of the highest probability
+        # Get the highest probability prediction and its confidence
         predicted_idx = np.argmax(predictions, axis=1)
         predicted_category = label_encoder.inverse_transform(predicted_idx)[0]
-
-        # Get the confidence rate
         confidence = float(np.max(predictions, axis=1)[0])
 
         # Log the results
@@ -144,8 +127,8 @@ def predict():
         log.i('Confidence: ', confidence)
         log.i('Prediction time: {} seconds'.format(prediction_time))
 
-        # Store the prediction result and keypoints in the database
-        store_prediction_history(predictions, predicted_category, confidence, prediction_time, keypoints)
+        # Store the prediction result and keypoints in the database in a separate thread
+        threading.Thread(target=store_prediction_history, args=(predictions, predicted_category, confidence, prediction_time, np.array(data.keypoints))).start()
 
         # Trigger garbage collection
         gc.collect()
@@ -173,18 +156,14 @@ def model_update():
     model_file = request.files['model']
     category_file = request.files['category']
 
-    # Ensure there are selected files in the request
+    # Validate files exsistence and extensions
     if model_file.filename == '':
         raise BadRequest("No selected file for 'model'")
-    elif category_file.filename == '':
+    if category_file.filename == '':
         raise BadRequest("No selected file for 'category'")
-    
-    # Validate the 'model' file extension
-    if not check_allowed_files(model_file.filename, MODEL_ALLOWED_EXTENSIONS):
+    if not check_allowed_files(model_file.filename, 'keras'):
         raise BadRequest(f"Invalid file type for 'model': {model_file.filename}. Expected .keras")
-
-    # Validate the 'category' file extension
-    if not check_allowed_files(category_file.filename, CATEGORY_ALLOWED_EXTENSIONS):
+    if not check_allowed_files(category_file.filename, 'txt'):
         raise BadRequest(f"Invalid file type for 'category': {category_file.filename}. Expected .txt")
 
     # Check that the 'category' file is not empty and store each line into an array
@@ -200,8 +179,7 @@ def model_update():
     category_file.seek(0)
     
     # Process the 'model' file
-    model_filename = secure_filename(model_file.filename)
-    model_path = os.path.join(app.config['UPLOAD_FOLDER'], model_filename)
+    model_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(model_file.filename))
 
     conn = None
     try:
@@ -282,7 +260,6 @@ def get_prediction_history():
 @app.errorhandler(HTTPException)
 def handle_exception(e):
     """Return JSON instead of HTML for HTTP errors."""
-    response = e.get_response()
     return handle_custom_exception(e.description, e.code)
 
 def handle_custom_exception(error, code):

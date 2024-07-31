@@ -89,5 +89,5 @@ def preprocess_keypoints(keypoints):
     return features
 
 
-def check_allowed_files(filename, allowed_extensions):
+def check_allowed_files(filename, *allowed_extensions):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
