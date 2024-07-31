@@ -41,7 +41,7 @@ initializeMoveNetModel()
         global.detector = detector;
 
         // Start listening after detector initialized
-        app.listen(port, () => {
+        const server = app.listen(port, () => {
             logger.debug(`Server is running on port ${port}`);
         })
 
