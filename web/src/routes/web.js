@@ -100,6 +100,13 @@ router.post('/predict', upload.single('image'), async (req, res) => {
             consumedTime: consumedTime,
         });
     } catch (error) {
+        if (error.response) {
+            // The request was made, and the server responded with a status code
+            // that falls out of the range of 2xx
+            logger.error(`API error response: ${JSON.stringify(error.response.data)}`);
+            return res.status(error.response.status).send(`API Error: ${error.response.data.message}`);
+        }
+
         logger.error(`Error fetching data: ${error.message}`);
         res.status(500).send('Server error');
     }
