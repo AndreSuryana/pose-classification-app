@@ -1,7 +1,7 @@
 # Stage 1: Build Stage
 FROM python:3.10-slim AS build
 
-WORKDIR /app
+WORKDIR /api
 
 # Install dependencies with cache
 COPY requirements.txt requirements.txt
@@ -12,16 +12,16 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 
 # Copy the application files
 COPY . .
-RUN ls -R /app
+RUN ls -R /api
 
 # Stage 2: Final Stage
 FROM python:3.10-slim
 
-WORKDIR /app
+WORKDIR /api
 
 # Copy only the necassary files from the build stage
 COPY --from=build /opt/venv /opt/venv
-COPY --from=build /app /app
+COPY --from=build /api /api
 
 # Ensure the virtual environment is used
 ENV PATH="/opt/venv/bin:$PATH"
