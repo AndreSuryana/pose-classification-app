@@ -30,7 +30,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 EXPOSE ${API_PORT}
 
 # Run the application with Gunicorn
-CMD [ "sh", "-c", "gunicorn -w 1 -k sync -b ${API_HOST}:${API_PORT} app:app" ]
+CMD [ "sh", "-c", "gunicorn -w 1 -k sync -b ${API_HOST}:${API_PORT} --max-requests 100 --max-requests-jitter 25 --timeout 60 --graceful-timeout 60 app:app" ]
 
 # Run the application
 # CMD [ "python", "app.py" ]
