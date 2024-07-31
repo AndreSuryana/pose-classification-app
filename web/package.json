@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node src/app.js",
+    "start": "pm2-runtime start pm2.config.js",
     "start-dev": "nodemon src/app.js"
   },
   "author": "Andre Suryana",
@@ -20,6 +20,7 @@
     "express": "^4.19.2",
     "multer": "^1.4.5-lts.1",
     "node-cron": "^3.0.3",
+    "pm2": "^5.4.2",
     "winston": "^3.13.0",
     "winston-daily-rotate-file": "^5.0.0"
   },
