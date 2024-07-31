@@ -4,7 +4,7 @@ module.exports = {
             name: 'pose-classification-web',
             script: './src/app.js',
             watch: true,
-            ignore_watch: ['logs', 'node_modules'],
+            ignore_watch: ['logs', 'node_modules', 'public/uploads', 'public/processed_images'],
             autorestart: true,
             max_memory_restart: '400M',
             env: {
