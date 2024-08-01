@@ -96,7 +96,8 @@ def predict():
     try:
         # Check for model initialization
         if model is None:
-            raise InternalServerError("Model is not initialized. Please update the model.")
+            log.i("Trying to load the latest model...")
+            load_latest_model_and_categories()
 
         # Parse and validate the request data
         data = PredictRequest(**request.get_json())
