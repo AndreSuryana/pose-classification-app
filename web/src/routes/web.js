@@ -95,7 +95,7 @@ router.post('/predict', upload.single('image'), async (req, res) => {
         res.render('result', {
             processedImage: processedImagePath,
             confidence: response.data.confidence,
-            predictedCategory: response.data.prediction,
+            predictedCategory: mapPredictionCategory(response.data.prediction),
             predictionTime: response.data.prediction_time,
             consumedTime: consumedTime,
         });
@@ -111,5 +111,13 @@ router.post('/predict', upload.single('image'), async (req, res) => {
         res.status(500).send('Server error');
     }
 });
+
+const mapPredictionCategory = (category) => {
+    switch (category) {
+        case 'good': return 'Baik';
+        case 'bad': return 'Buruk';
+        default: return category;
+    }
+}
 
 module.exports = router 
