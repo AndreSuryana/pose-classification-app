@@ -1,0 +1,22 @@
+[Unit]
+Description=Gunicorn instance for Dorsal API
+After=network.target
+
+[Service]
+User=dorsal
+Group=www-data
+WorkingDirectory=/home/dorsal/dorsal-app/api
+Environment="PATH=/home/dorsal/dorsal-app/api/venv/bin"
+
+ExecStart=/home/dorsal/dorsal-app/api/venv/bin/gunicorn \
+    --workers 1 \
+    --bind 127.0.0.1:3001 \
+    --timeout 120 \
+    --max-requests 100 \
+    app:app
+
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
